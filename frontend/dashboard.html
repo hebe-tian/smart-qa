@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>需求管理 - AI用例生成平台</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <nav class="navbar">
+                <div class="navbar-breadcrumb">
+                    <span>需求管理</span>
+                </div>
+                <div class="navbar-right" id="navbarRight"></div>
+            </nav>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">需求管理</h1>
+                        <p class="page-subtitle">创建需求稿，AI自动分析并生成测试用例</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-secondary user-only" onclick="Dashboard.uploadDocument()">
+                            上传文档
+                        </button>
+                        <button class="btn btn-primary user-only" onclick="Dashboard.showCreateModal()">
+                            + 新建需求
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-toolbar">
+                    <div class="search-box">
+                        <span class="search-icon">[?]</span>
+                        <input type="text" class="search-input" id="searchInput"
+                               placeholder="搜索需求标题..." oninput="Dashboard.handleSearch()">
+                    </div>
+                    <select class="form-select" id="statusFilter" style="width: auto;" onchange="Dashboard.load()">
+                        <option value="">全部状态</option>
+                        <option value="draft">草稿</option>
+                        <option value="analyzing">分析中</option>
+                        <option value="qa">问答中</option>
+                        <option value="generating">生成中</option>
+                        <option value="completed">已完成</option>
+                    </select>
+                    <select class="form-select" id="projectTypeFilter" style="width: auto;" onchange="Dashboard.load()">
+                        <option value="">全部类型</option>
+                        <option value="production">线上项目</option>
+                        <option value="test">测试项目</option>
+                    </select>
+                </div>
+
+                <div id="requirementList" class="requirement-list"></div>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <div class="empty-state-text">暂无需求，点击"新建需求"开始</div>
+                </div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Requirement Modal -->
+    <div id="createModal"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/analytics.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/sidebar.js"></script>
+    <script src="/js/components/navbar.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/pages/dashboard.js"></script>
+    <script>
+        Auth.requireAuth();
+        Sidebar.render('dashboard');
+        Navbar.render();
+        Analytics.track('page_view', { page: 'dashboard' });
+        Dashboard.load();
+    </script>
+</body>
+</html>

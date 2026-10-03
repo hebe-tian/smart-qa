@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>调用记录 - AI用例生成平台</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <div class="main-content">
+            <nav class="navbar">
+                <div class="navbar-breadcrumb">
+                    <span>AI调用记录</span>
+                </div>
+                <div class="navbar-right" id="navbarRight"></div>
+            </nav>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">AI调用记录</h1>
+                        <p class="page-subtitle">查看每次AI API调用的完整请求、响应、Token消耗和耗时</p>
+                    </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="filter-bar">
+                    <select id="filterType" onchange="CallLogsPage.load()">
+                        <option value="">全部类型</option>
+                        <option value="analyze">需求分析</option>
+                        <option value="qa">问答追问</option>
+                        <option value="module_gen">模块生成</option>
+                        <option value="case_gen">用例生成</option>
+                        <option value="regen">重新生成</option>
+                        <option value="test_conn">连接测试</option>
+                    </select>
+                    <select id="filterStatus" onchange="CallLogsPage.load()">
+                        <option value="">全部状态</option>
+                        <option value="success">成功</option>
+                        <option value="failed">失败</option>
+                        <option value="running">运行中</option>
+                    </select>
+                </div>
+
+                <!-- Call Logs Table -->
+                <div class="card">
+                    <div class="card-body" style="padding: 0;">
+                        <table class="table" id="callLogTable">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>类型</th>
+                                    <th>模型</th>
+                                    <th>状态</th>
+                                    <th>Token</th>
+                                    <th>耗时</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="callLogTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="pagination" class="pagination"></div>
+                <div id="detailModal"></div>
+                <div class="toast-container" id="toastContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/analytics.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/sidebar.js"></script>
+    <script src="/js/components/navbar.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/pages/call-logs.js"></script>
+    <script>
+        Auth.requireAuth();
+        if (Auth.denyGuest()) throw new Error('guest');
+        Sidebar.render('call-logs');
+        Navbar.render();
+        Analytics.track('page_view', { page: 'call-logs' });
+        CallLogsPage.load();
+    </script>
+</body>
+</html>

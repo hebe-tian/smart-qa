@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问答 - AI用例生成平台</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <div class="main-content">
+            <nav class="navbar">
+                <div class="navbar-breadcrumb">
+                    <span>问答</span>
+                </div>
+                <div class="navbar-right" id="navbarRight"></div>
+            </nav>
+
+            <div class="page-content kb-qa-page">
+                <div class="kb-qa-layout">
+                    <!-- Left: Session List -->
+                    <div class="kb-session-sidebar">
+                        <div class="kb-session-header">
+                            <button class="btn btn-primary btn-block user-only" onclick="QA.newSession()">
+                                <span>+ 新建问答</span>
+                            </button>
+                        </div>
+                        <div class="kb-session-list" id="kbSessionList">
+                            <div class="kb-session-empty">暂无问答会话</div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Chat Area -->
+                    <div class="kb-chat-wrapper">
+                        <!-- KB Status Bar -->
+                        <div class="kb-status-bar" id="kbStatusBar">
+                            <div class="kb-status-info">
+                                <span class="kb-status-indicator" id="kbStatusDot"></span>
+                                <span class="kb-status-text" id="kbStatusText">加载中...</span>
+                                <span class="kb-status-meta" id="kbStatusMeta"></span>
+                            </div>
+                            <button class="btn btn-secondary btn-sm user-only" id="rebuildBtn" onclick="QA.rebuild()">
+                                重建索引
+                            </button>
+                        </div>
+
+                        <!-- Chat Area -->
+                        <div class="kb-chat-area">
+                            <!-- Messages -->
+                            <div class="chat-messages" id="chatMessages">
+                                <div class="kb-welcome" id="kbWelcome">
+                                    <div class="kb-welcome-icon">[?]</div>
+                                    <div class="kb-welcome-title">智能问答</div>
+                                    <div class="kb-welcome-desc" id="kbWelcomeDesc">
+                                        基于需求文档、业务代码和历史问答，用自然语言提问。AI 会自主判断是否需要追问，给出解答后你可以反馈准确度。
+                                    </div>
+                                    <div class="kb-suggestions user-only" id="kbSuggestions">
+                                        <div class="kb-suggestion-item" onclick="QA.quickAsk('登录功能有哪些测试用例？')">登录功能有哪些测试用例？</div>
+                                        <div class="kb-suggestion-item" onclick="QA.quickAsk('边界测试用例一般覆盖哪些场景？')">边界测试用例一般覆盖哪些场景？</div>
+                                        <div class="kb-suggestion-item" onclick="QA.quickAsk('异常测试怎么设计？')">异常测试怎么设计？</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Input Area (disabled for read-only guests) -->
+                            <div class="kb-input-area user-only-disabled">
+                                <textarea class="kb-input" id="kbInput"
+                                          placeholder="游客仅可浏览，登录后可提问..."
+                                          rows="1"
+                                          onkeydown="QA.handleKeydown(event)"
+                                          oninput="QA.autoResize(this)"></textarea>
+                                <div class="kb-input-actions">
+                                    <button class="btn btn-secondary btn-sm" id="forceAnswerBtn"
+                                            onclick="QA.send(true)" title="跳过追问，直接给出答案">
+                                        直接回答
+                                    </button>
+                                    <button class="btn btn-primary" id="sendBtn" onclick="QA.send()">
+                                        发送
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/analytics.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/sidebar.js"></script>
+    <script src="/js/components/navbar.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/pages/qa.js"></script>
+    <script>
+        Auth.requireAuth();
+        Sidebar.render('qa');
+        Navbar.render();
+        Analytics.track('page_view', { page: 'qa' });
+        QA.init();
+    </script>
+</body>
+</html>

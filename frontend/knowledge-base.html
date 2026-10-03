@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库 - AI用例生成平台</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <div class="main-content">
+            <nav class="navbar">
+                <div class="navbar-breadcrumb">
+                    <span>知识库</span>
+                </div>
+                <div class="navbar-right" id="navbarRight"></div>
+            </nav>
+
+            <div class="page-content kb-mgmt-page">
+                <!-- Status Bar -->
+                <div class="kb-status-bar" id="kbStatusBar">
+                    <div class="kb-status-info">
+                        <span class="kb-status-indicator" id="kbStatusDot"></span>
+                        <span class="kb-status-text" id="kbStatusText">加载中...</span>
+                        <span class="kb-status-meta" id="kbStatusMeta"></span>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="rebuildBtn" onclick="KnowledgeBase.rebuild()">
+                        重建索引
+                    </button>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="kb-stats-grid" id="kbStatsGrid">
+                    <div class="kb-stat-card">
+                        <div class="kb-stat-icon">[D]</div>
+                        <div class="kb-stat-body">
+                            <div class="kb-stat-label">需求文档</div>
+                            <div class="kb-stat-value" id="kbStatReq">-</div>
+                            <div class="kb-stat-sub" id="kbStatReqSub">需求 / 模块 / 测试用例</div>
+                        </div>
+                    </div>
+                    <div class="kb-stat-card">
+                        <div class="kb-stat-icon">[Q]</div>
+                        <div class="kb-stat-body">
+                            <div class="kb-stat-label">历史问答</div>
+                            <div class="kb-stat-value" id="kbStatQa">-</div>
+                            <div class="kb-stat-sub" id="kbStatQaSub">已采纳问答 / 错误参考</div>
+                        </div>
+                    </div>
+                    <div class="kb-stat-card">
+                        <div class="kb-stat-icon">[C]</div>
+                        <div class="kb-stat-body">
+                            <div class="kb-stat-label">代码库</div>
+                            <div class="kb-stat-value" id="kbStatCode">-</div>
+                            <div class="kb-stat-sub" id="kbStatCodeSub">已索引分块 / 文档数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Bar -->
+                <div class="kb-tab-bar">
+                    <div class="kb-tab-item active" data-tab="code" onclick="KnowledgeBase.switchTab('code')">
+                        <span class="kb-tab-icon">[C]</span>
+                        <span>代码库</span>
+                    </div>
+                    <div class="kb-tab-item" data-tab="qa" onclick="KnowledgeBase.switchTab('qa')">
+                        <span class="kb-tab-icon">[Q]</span>
+                        <span>历史问答</span>
+                    </div>
+                </div>
+
+                <!-- Code Library Tab -->
+                <div class="kb-tab-pane active" id="kbTabCode">
+                    <div class="kb-code-layout">
+                        <!-- Top: ZIP Upload -->
+                        <div class="kb-code-top">
+                            <div class="kb-code-github-area">
+                                <div class="kb-code-section-title">代码包上传</div>
+                                <input type="text" class="kb-code-input" id="kbCodeTitle" placeholder="文档标题（必填）">
+                                <input type="text" class="kb-code-input" id="kbCodeDesc" placeholder="描述（可选）">
+                                <button class="btn btn-primary btn-sm" onclick="CodeSource.uploadZip()">选择 zip 文件上传</button>
+                                <div class="kb-code-upload-guide">
+                                    <div class="kb-code-guide-title">操作指引</div>
+                                    <div class="kb-code-guide-step">1. 在 GitHub / GitLab / Gitee 仓库页面，点击 <strong>Code</strong> → <strong>Download ZIP</strong> 下载源码压缩包</div>
+                                    <div class="kb-code-guide-step">2. 私有仓库：先用你的账号克隆到本地，再压缩为 zip 即可</div>
+                                    <div class="kb-code-guide-step">3. 输入文档标题后点击上方按钮，选择下载的 zip 文件上传</div>
+                                    <div class="kb-code-guide-step">4. 系统自动解压提取代码文件（支持 .py .js .ts .java 等），跳过 node_modules 等无关目录</div>
+                                    <div class="kb-code-guide-hint">支持任意 Git 平台（GitHub / GitLab / Gitee / 自建），单文件不超过 1MB，最多 200 个文件，zip 不超过 50MB</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bottom: Document List -->
+                        <div class="kb-code-doc-section">
+                            <div class="kb-code-section-header">
+                                <div class="kb-code-section-title">代码文档列表</div>
+                                <button class="btn btn-secondary btn-sm" onclick="CodeSource.rebuildAll()">重建全部索引</button>
+                            </div>
+                            <div class="kb-code-doc-table" id="kbCodeDocList">
+                                <div class="kb-code-doc-empty">暂无代码文档，请上传 zip 代码包</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historical Q&A Tab -->
+                <div class="kb-tab-pane" id="kbTabQa">
+                    <div class="kb-qa-history-layout">
+                        <div class="kb-code-section-header">
+                            <div class="kb-code-section-title">问答历史</div>
+                        </div>
+                        <div class="kb-qa-history-table" id="kbQaHistoryList">
+                            <div class="kb-code-doc-empty">加载中...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/analytics.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/sidebar.js"></script>
+    <script src="/js/components/navbar.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/pages/knowledge-base.js"></script>
+    <script src="/js/pages/code-source.js"></script>
+    <script>
+        Auth.requireAuth();
+        if (Auth.denyGuest()) throw new Error('guest');
+        Sidebar.render('knowledge-base');
+        Navbar.render();
+        Analytics.track('page_view', { page: 'knowledge-base' });
+        KnowledgeBase.init();
+    </script>
+</body>
+</html>

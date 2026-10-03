@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI配置 - AI用例生成平台</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <div class="main-content">
+            <nav class="navbar">
+                <div class="navbar-breadcrumb">
+                    <span>AI模型配置</span>
+                </div>
+                <div class="navbar-right" id="navbarRight"></div>
+            </nav>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">AI模型配置</h1>
+                        <p class="page-subtitle">配置OpenAI兼容API，支持OpenAI/智谱/通义/Moonshot/DeepSeek等</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="AIConfigPage.showFormModal()">
+                        + 添加模型
+                    </button>
+                </div>
+
+                <!-- Config List -->
+                <div class="config-list">
+                    <div class="card">
+                        <div class="card-body" style="padding: 0;">
+                            <table class="table" id="configTable">
+                                <thead>
+                                    <tr>
+                                        <th>名称</th>
+                                        <th>类型</th>
+                                        <th>Base URL</th>
+                                        <th>对话模型</th>
+                                        <th>Embedding</th>
+                                        <th>状态</th>
+                                        <th>默认</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="configTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Config Form Modal -->
+                <div id="formModal"></div>
+                <div class="toast-container" id="toastContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/analytics.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/sidebar.js"></script>
+    <script src="/js/components/navbar.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/pages/ai-config.js"></script>
+    <script>
+        Auth.requireAuth();
+        if (Auth.denyGuest()) throw new Error('guest');
+        Sidebar.render('ai-config');
+        Navbar.render();
+        Analytics.track('page_view', { page: 'ai-config' });
+        AIConfigPage.load();
+    </script>
+</body>
+</html>

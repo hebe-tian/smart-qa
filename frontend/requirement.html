@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>需求详情 - AI用例生成平台</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <div class="main-content">
+            <nav class="navbar">
+                <div class="navbar-breadcrumb" id="breadcrumb">
+                    <a onclick="Router.navigate('dashboard')">需求管理</a>
+                    <span class="navbar-breadcrumb-separator">/</span>
+                    <span id="reqBreadcrumb">详情</span>
+                </div>
+                <div class="navbar-right" id="navbarRight"></div>
+            </nav>
+
+            <div class="page-content">
+                <!-- Requirement Info -->
+                <div class="requirement-info-card" id="reqInfoCard"></div>
+
+                <!-- Action Bar -->
+                <div class="action-bar" id="actionBar"></div>
+
+                <!-- Tabs -->
+                <div class="tabs" id="tabs">
+                    <div class="tab active" onclick="RequirementPage.switchTab('qa', this)">问答补全</div>
+                    <div class="tab" onclick="RequirementPage.switchTab('generate', this)">生成进度</div>
+                    <div class="tab" onclick="RequirementPage.switchTab('tree', this)">模块用例</div>
+                </div>
+
+                <!-- Tab Content: QA -->
+                <div class="tab-content active" id="tab-qa">
+                    <div class="card" style="height: 500px;">
+                        <div class="chat-container">
+                            <div class="chat-messages" id="chatMessages"></div>
+                            <div class="chat-input-area user-only">
+                                <textarea class="chat-input" id="qaInput" rows="2"
+                                          placeholder="输入你的回答..." onkeydown="RequirementPage.handleQAKeydown(event)"></textarea>
+                                <button class="btn btn-primary" id="qaSendBtn" onclick="RequirementPage.sendAnswer()">发送</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Generate -->
+                <div class="tab-content" id="tab-generate">
+                    <div class="card">
+                        <div class="card-body" id="generatePanel">
+                            <div class="empty-state">
+                                <div class="empty-state-text">点击下方按钮开始AI生成</div>
+                            </div>
+                            <div class="action-bar mt-4 user-only">
+                                <button class="btn btn-primary" onclick="RequirementPage.startGenerateModules()">
+                                    生成模块
+                                </button>
+                                <button class="btn btn-secondary" onclick="RequirementPage.startGenerateAllCases()">
+                                    生成全部用例
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Tree -->
+                <div class="tab-content" id="tab-tree">
+                    <div class="tree-detail-layout">
+                        <div class="tree-panel">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="font-semibold">模块用例树</span>
+                                <div class="flex gap-2">
+                                    <div class="dropdown" id="exportDropdown">
+                                        <button class="btn btn-secondary btn-sm dropdown-toggle" onclick="RequirementPage.toggleExportMenu(event)" id="exportBtn">
+                                            导出 <span class="dropdown-arrow">▾</span>
+                                        </button>
+                                        <div class="dropdown-menu" id="exportMenu">
+                                            <a class="dropdown-item" onclick="RequirementPage.exportCases('html')">
+                                                <span class="dropdown-item-icon">🌐</span>
+                                                <div>
+                                                    <div class="dropdown-item-label">HTML</div>
+                                                    <div class="dropdown-item-desc">网页格式，可直接预览</div>
+                                                </div>
+                                            </a>
+                                            <a class="dropdown-item" onclick="RequirementPage.exportCases('md')">
+                                                <span class="dropdown-item-icon">📝</span>
+                                                <div>
+                                                    <div class="dropdown-item-label">Markdown</div>
+                                                    <div class="dropdown-item-desc">MD 格式，适合文档系统</div>
+                                                </div>
+                                            </a>
+                                            <a class="dropdown-item" onclick="RequirementPage.exportCases('xmind')">
+                                                <span class="dropdown-item-icon">🧠</span>
+                                                <div>
+                                                    <div class="dropdown-item-label">XMind</div>
+                                                    <div class="dropdown-item-desc">思维导图，模块分支结构</div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary btn-sm user-only" onclick="RequirementPage.showRegenModal()">
+                                        重新生成
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="treeContainer" class="tree"></div>
+                        </div>
+                        <div class="detail-panel" id="detailPanel">
+                            <div class="empty-state">
+                                <div class="empty-state-text">选择左侧树节点查看详情</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="regenModal"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/analytics.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/sidebar.js"></script>
+    <script src="/js/components/navbar.js"></script>
+    <script src="/js/components/tree.js"></script>
+    <script src="/js/components/progress.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/pages/requirement.js"></script>
+    <script>
+        Auth.requireAuth();
+        Sidebar.render('requirement');
+        Navbar.render();
+        const reqId = new URLSearchParams(location.search).get('id');
+        Analytics.track('page_view', { page: 'requirement', requirement_id: reqId });
+        RequirementPage.init(reqId);
+    </script>
+</body>
+</html>

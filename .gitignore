@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+dist/
+build/
+*.whl
+
+# Virtual environment
+venv/
+.venv/
+env/
+ENV/
+virtualenv/
+.smart-qa/
+
+# Environment variables & secrets
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.p12
+!.env.example
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite3-journal
+*.db-wal
+*.db-shm
+instance/
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Runtime / uploads
+uploads/
+media/
+static/uploads/
+tmp/
+temp/
+
+# Test / coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.pytest_cache/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Frontend
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+.cache/
+
+# Screenshots / images / dev artifacts
+screenshots/
+*.png
+login_snap.yaml
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# CodeBuddy
+.codebuddy/

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP管理 - AI用例生成平台</title>
+    <link rel="stylesheet" href="/css/variables.css">
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar" id="sidebar"></aside>
+
+        <div class="main-content">
+            <nav class="navbar">
+                <div class="navbar-breadcrumb">
+                    <span>SOP管理</span>
+                </div>
+                <div class="navbar-right" id="navbarRight"></div>
+            </nav>
+
+            <div class="page-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">SOP管理</h1>
+                        <p class="page-subtitle">问答生成的标准操作程序：查看历史、构建知识库、配置生成模板</p>
+                    </div>
+                </div>
+
+                <!-- SOP List -->
+                <div class="config-list">
+                    <div class="card">
+                        <div class="card-body" style="padding: 0;">
+                            <table class="table" id="sopTable">
+                                <thead>
+                                    <tr>
+                                        <th>标题</th>
+                                        <th>来源会话</th>
+                                        <th>创建时间</th>
+                                        <th>知识库</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sopTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOP Template Config -->
+                <div class="card" style="margin-top: var(--space-6);">
+                    <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
+                        <span>SOP 模板配置</span>
+                        <div style="display:flex; gap: var(--space-2);">
+                            <button class="btn btn-secondary btn-sm" onclick="SOPPage.resetSopTemplate()">恢复默认</button>
+                            <button class="btn btn-primary btn-sm" onclick="SOPPage.saveSopTemplate()">保存模板</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="form-hint" style="margin-bottom: var(--space-3);">
+                            定义问答生成 SOP 时使用的默认格式模板（背景与目的、适用范围、前置条件、操作步骤、注意事项、验收标准等）。
+                        </p>
+                        <textarea id="sopTemplateInput" class="form-textarea" rows="16" style="font-family: monospace;"></textarea>
+                    </div>
+                </div>
+
+                <div class="toast-container" id="toastContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/analytics.js"></script>
+    <script src="/js/components/toast.js"></script>
+    <script src="/js/components/modal.js"></script>
+    <script src="/js/components/sidebar.js"></script>
+    <script src="/js/components/navbar.js"></script>
+    <script src="/js/router.js"></script>
+    <script src="/js/pages/sop.js"></script>
+    <script>
+        Auth.requireAuth();
+        if (Auth.denyGuest()) throw new Error('guest');
+        Sidebar.render('sop');
+        Navbar.render();
+        Analytics.track('page_view', { page: 'sop' });
+        SOPPage.load();
+    </script>
+</body>
+</html>
