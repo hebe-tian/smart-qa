@@ -126,7 +126,27 @@ unzip smart-qa.zip
 
 确保项目路径为 `/home/{username}/smart-qa/`。
 
-### 2.3 创建 Web App
+### 2.3 创建虚拟环境并安装依赖
+
+打开 Bash console，在项目根目录创建名为 `.smart-qa` 的虚拟环境（与本地开发保持一致）：
+
+```bash
+cd /home/{username}/smart-qa
+python3 -m venv .smart-qa
+```
+
+激活虚拟环境并安装依赖：
+
+```bash
+source .smart-qa/bin/activate
+pip install --upgrade pip
+pip install -r backend/requirements.txt
+```
+
+> 激活后 `python` / `pip` 均指向项目内的 `.smart-qa/bin/`，与系统 Python 隔离。
+> 后续在 console 中执行 `python`、`pip` 前，都应先激活虚拟环境，或直接使用绝对路径 `/home/{username}/smart-qa/.smart-qa/bin/python`。
+
+### 2.4 创建 Web App
 
 1. 进入 Dashboard → **Web** 标签页
 2. 点击 **Add a new web app**
@@ -138,16 +158,34 @@ unzip smart-qa.zip
 |--------|-----|
 | Source code | `/home/{username}/smart-qa/backend` |
 | Working directory | `/home/{username}/smart-qa/backend` |
+| Virtualenv | `/home/{username}/smart-qa/.smart-qa` |
 
-### 2.4 配置 WSGI 文件
+> Virtualenv 一栏填虚拟环境根目录（即 `.smart-qa`，不要填 `.smart-qa/bin`），让 Web App 使用虚拟环境中的 Python 及依赖运行。
 
-在 Web 标签页找到 **WSGI configuration file** 链接，点击编辑，将内容替换为：
+### 2.5 配置 WSGI 文件（含生产密钥）
+
+> PythonAnywhere 的 Web 标签页**没有** Environment variables 输入框，生产密钥等环境变量统一写入 WSGI 文件，本步骤一次配置到位。
+
+**第 1 步：生成随机密钥。** 打开 Bash console，执行以下两条命令并记录输出结果：
+
+```bash
+python -c "import secrets; print('SECRET_KEY:', secrets.token_hex(32))"
+python -c "import secrets; print('ENCRYPTION_KEY:', secrets.token_hex(32))"
+```
+
+**第 2 步：编辑 WSGI 文件。** 在 Web 标签页找到 **WSGI configuration file** 链接，点击进入在线编辑器，将文件**全部内容**删除后替换为：
 
 ```python
 import os
 import sys
 
-# 设置项目路径
+# ---------- 环境变量（生产密钥，按第 1 步生成的值填写） ----------
+os.environ['SECRET_KEY'] = '（第 1 步生成的 SECRET_KEY）'
+os.environ['ENCRYPTION_KEY'] = '（第 1 步生成的 ENCRYPTION_KEY）'
+os.environ['ADMIN_USERNAME'] = 'myadmin'
+os.environ['ADMIN_PASSWORD'] = '（自定义强密码）'
+
+# ---------- 项目路径 ----------
 project_home = '/home/{username}/smart-qa'
 os.environ['PROJECT_HOME'] = project_home
 
@@ -159,15 +197,21 @@ from app import create_app
 application = create_app()
 ```
 
-> 也可以直接使用项目自带的 `wsgi.py` 文件，在 WSGI 配置中设置环境变量 `PROJECT_HOME=/home/{username}/smart-qa`。
+把 `{username}` 替换为你的 PythonAnywhere 用户名，将占位密钥替换为第 1 步生成的值，然后点击 **Save** 保存。
 
-### 2.5 安装依赖
+变量说明：
 
-打开 Bash console，执行：
+| 变量 | 说明 |
+|------|------|
+| `SECRET_KEY` | Flask 会话密钥，用第 1 步生成值 |
+| `ENCRYPTION_KEY` | AI API Key 加密密钥，用第 1 步生成值 |
+| `ADMIN_USERNAME` | 初始管理员登录名（仅首次初始化数据库时创建） |
+| `ADMIN_PASSWORD` | 初始管理员密码（仅首次初始化数据库时创建） |
 
-```bash
-pip install --user -r /home/{username}/smart-qa/backend/requirements.txt
-```
+> 注意事项：
+> - WSGI 文件保存在 PythonAnywhere 服务器上，不在项目仓库中，密钥不会被提交到 GitHub。
+> - 之后每次修改 WSGI 文件，都需要在 Web 标签页点击 **Reload** 才生效（见 2.8）。
+> - 第 2.7 步初始化数据库时会用到这里的 `ADMIN_USERNAME` / `ADMIN_PASSWORD`，请记住填写的值。
 
 ### 2.6 配置静态文件
 
@@ -179,43 +223,36 @@ pip install --user -r /home/{username}/smart-qa/backend/requirements.txt
 | `/js/` | `/home/{username}/smart-qa/frontend/js/` |
 | `/assets/` | `/home/{username}/smart-qa/frontend/assets/` |
 
-### 2.7 设置环境变量
+### 2.7 初始化数据库
 
-在 Web 标签页的 **Environment variables** 部分添加：
-
-| 变量 | 值 |
-|------|-----|
-| `SECRET_KEY` | （随机强密码字符串） |
-| `ENCRYPTION_KEY` | （32 位随机字符串） |
-| `ADMIN_USERNAME` | （自定义初始管理员登录名，如 `myadmin`） |
-| `ADMIN_PASSWORD` | （自定义初始管理员密码，建议强密码） |
-
-> `ADMIN_USERNAME` / `ADMIN_PASSWORD` 仅在数据库无用户（首次初始化）时用于创建初始管理员，已有数据库不受影响。
-
-生成随机密钥：
+打开 Bash console，先设置与管理员相关的环境变量（**必须与 2.5 中 WSGI 文件填写的值一致**），再用虚拟环境中的 Python 执行初始化：
 
 ```bash
-python -c "import secrets; print(secrets.token_hex(32))"
-```
-
-### 2.8 初始化数据库
-
-打开 Bash console，执行：
-
-```bash
+export ADMIN_USERNAME='myadmin'
+export ADMIN_PASSWORD='（与 2.5 中相同的强密码）'
 cd /home/{username}/smart-qa/backend
-python init_db.py
+/home/{username}/smart-qa/.smart-qa/bin/python init_db.py
 ```
 
-### 2.9 重启 Web App
+看到以下输出即成功：
 
-回到 Web 标签页，点击绿色的 **Reload** 按钮。
+```
+Default admin created: myadmin / ******
+Database initialized successfully.
+```
 
-### 2.10 验证
+> WSGI 文件中的环境变量只在 Web 进程内生效，Bash console 不会自动继承，因此这里需要 `export`。
+> 若显示 `Database already has users. Skipping admin creation.`，说明数据库已有用户，`ADMIN_*` 变量不再起作用。
+
+### 2.8 重载 Web App
+
+回到 Web 标签页，点击绿色的 **Reload** 按钮，让 WSGI、静态文件等所有配置生效。
+
+### 2.9 验证
 
 浏览器访问 `https://{username}.pythonanywhere.com/`，应看到登录页面。
 
-使用 `admin` / `admin123` 登录后，前往 **AI 配置** 页面添加 AI 模型。
+使用 2.5 中设置的管理员账号（如 `myadmin`）登录后，前往 **AI 配置** 页面添加 AI 模型（见 3.1）。若页面报错，先点击一次 **Reload**，再按第四章"常见问题"排查。
 
 ---
 
@@ -239,11 +276,11 @@ python init_db.py
 
 ### 3.2 修改管理员密码
 
-登录后在系统中修改默认密码，或在 console 中执行：
+登录后在系统中修改默认密码，或在 console 中执行（使用虚拟环境中的 Python）：
 
 ```bash
 cd /home/{username}/smart-qa/backend
-python -c "
+/home/{username}/smart-qa/.smart-qa/bin/python -c "
 from app import create_app
 from app.extensions import db
 from app.models.user import User
@@ -296,4 +333,4 @@ PythonAnywhere 免费账号限制 5 分钟请求超时。生成大量测试用�
 
 ### 4.4 模块导入失败
 
-确认 `sys.path` 已正确添加 backend 目录，依赖已通过 `pip install --user` 安装。
+确认 `sys.path` 已正确添加 backend 目录，依赖已安装在虚拟环境 `.smart-qa` 中（见 2.3 节），且 Web App 的 Virtualenv 已指向 `/home/{username}/smart-qa/.smart-qa`。
