@@ -32,6 +32,12 @@ const Dashboard = {
 
         if (!requirements || requirements.length === 0) {
             listEl.innerHTML = '';
+            const textEl = emptyEl.querySelector('.empty-state-text');
+            if (textEl) {
+                textEl.textContent = Auth.isGuest()
+                    ? '暂无需求内容'
+                    : '暂无需求，点击"新建需求"开始';
+            }
             emptyEl.style.display = 'block';
             return;
         }

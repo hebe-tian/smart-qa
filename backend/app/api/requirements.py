@@ -20,7 +20,9 @@ def list_requirements():
     project_type = request.args.get("project_type")
     search = request.args.get("search", "").strip()
 
-    query = Requirement.query.filter_by(user_id=g.current_user_id)
+    query = Requirement.query
+    if g.current_user_id is not None:
+        query = query.filter_by(user_id=g.current_user_id)
     if status:
         query = query.filter_by(status=status)
     if project_type:
