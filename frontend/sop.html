@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOP管理 - AI用例生成平台</title>
+    <title>SOP管理 - SMART-QA</title>
     <link rel="stylesheet" href="/css/variables.css">
     <link rel="stylesheet" href="/css/base.css">
     <link rel="stylesheet" href="/css/components.css">
@@ -50,7 +50,7 @@
                 </div>
 
                 <!-- SOP Template Config -->
-                <div class="card" style="margin-top: var(--space-6);">
+                <div class="card user-only" style="margin-top: var(--space-6);">
                     <div class="card-header" style="display:flex; align-items:center; justify-content:space-between;">
                         <span>SOP 模板配置</span>
                         <div style="display:flex; gap: var(--space-2);">
@@ -83,7 +83,6 @@
     <script src="/js/pages/sop.js"></script>
     <script>
         Auth.requireAuth();
-        if (Auth.denyGuest()) throw new Error('guest');
         Sidebar.render('sop');
         Navbar.render();
         Analytics.track('page_view', { page: 'sop' });

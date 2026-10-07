@@ -72,10 +72,21 @@ class KBQAService:
         return session
 
     def list_sessions(self, user_id):
-        """List all Q&A sessions for a user, newest first, with linked sop_id."""
-        sessions = KBSession.query.filter_by(user_id=user_id).order_by(KBSession.updated_at.desc()).all()
+        """List Q&A sessions newest first, with linked sop_id.
+
+        Guests pass user_id=None and see all users' sessions (global read-only);
+        regular users only see their own.
+        """
+        query = KBSession.query
+        if user_id is not None:
+            query = query.filter_by(user_id=user_id)
+        sessions = query.order_by(KBSession.updated_at.desc()).all()
+
         from app.models.sop import SOP
-        sop_map = {s.kb_session_id: s.id for s in SOP.query.filter_by(user_id=user_id).all() if s.kb_session_id}
+        sop_query = SOP.query
+        if user_id is not None:
+            sop_query = sop_query.filter_by(user_id=user_id)
+        sop_map = {s.kb_session_id: s.id for s in sop_query.all() if s.kb_session_id}
         result = []
         for s in sessions:
             d = s.to_dict()

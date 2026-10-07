@@ -76,14 +76,25 @@ class SOPService:
     # ------------------------------------------------------------------
 
     def list_sops(self, user_id):
-        """List all SOPs for a user, newest first, with indexed flag."""
-        sops = SOP.query.filter_by(user_id=user_id).order_by(SOP.created_at.desc()).all()
+        """List SOPs newest first, with indexed flag.
+
+        Guests pass user_id=None and see all users' SOPs (global read-only);
+        regular users only see their own.
+        """
+        query = SOP.query
+        if user_id is not None:
+            query = query.filter_by(user_id=user_id)
+        sops = query.order_by(SOP.created_at.desc()).all()
         return [self._to_dict_with_indexed(s) for s in sops]
 
     def get_sop_dict(self, sop_id, user_id):
-        """Return a single SOP dict (ownership-checked) with indexed flag."""
+        """Return a single SOP dict with indexed flag.
+
+        Guests (user_id=None) may view any SOP; regular users are
+        ownership-checked.
+        """
         sop = SOP.query.get(sop_id)
-        if not sop or sop.user_id != user_id:
+        if not sop or (user_id is not None and sop.user_id != user_id):
             return None
         return self._to_dict_with_indexed(sop)
 

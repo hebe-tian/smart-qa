@@ -3,8 +3,10 @@
 Guests (JWT role == "guest") may browse business data via GET requests but:
 - All write methods (POST/PUT/DELETE/PATCH) are rejected with 403, except a
   small whitelist (guest login, normal login/register, analytics tracking).
-- Sensitive endpoints (AI config, call logs, SOP, code upload, KB QA) are
+- Sensitive endpoints (AI config, call logs, code upload, KB QA) are
   fully blocked, preventing guests from reading API keys or internal logs.
+- SOP is readable by guests (global read-only); its writes are still blocked
+  by the read-only rule below.
 
 Requests without a valid guest token are not touched here; per-endpoint
 ``token_required`` keeps handling authentication as before.
@@ -21,12 +23,12 @@ _WRITE_WHITELIST = {
 }
 
 # Sensitive API prefixes fully blocked for guests (any method).
-# Note: /api/kbqa (QA sessions) stays readable — the QA page is a business
-# page guests may browse; writes are blocked by the read-only rule below.
+# Note: /api/kbqa (QA sessions) and /api/sop (SOP docs) stay readable — those
+# are business pages guests may browse read-only; writes are blocked by the
+# read-only rule below.
 _SENSITIVE_PREFIXES = (
     "/api/ai-config",
     "/api/call-logs",
-    "/api/sop",
     "/api/code",
 )
 

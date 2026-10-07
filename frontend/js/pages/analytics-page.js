@@ -32,6 +32,10 @@ const AnalyticsPage = {
             { label: '总Token消耗', value: summary.total_tokens || 0, type: 'warning' },
             { label: '成功率', value: (summary.success_rate || 0) + '%', type: 'success' },
             { label: '失败次数', value: summary.failed_calls || 0, type: 'primary' },
+            { label: '问答会话数', value: summary.total_qa_sessions || 0, type: 'info' },
+            { label: '已反馈问答', value: summary.qa_feedback_count || 0, type: 'success' },
+            { label: 'SOP 总数', value: summary.total_sops || 0, type: 'primary' },
+            { label: 'SOP 已索引', value: summary.indexed_sops || 0, type: 'success' },
         ];
 
         grid.innerHTML = stats.map(s => `

@@ -3,15 +3,40 @@ const QA = {
     isQuerying: false,
     currentSessionId: null,
     sessionSopMap: {},  // session_id -> sop_id (page-lifetime cache)
+    _pollToken: 0,      // invalidates any in-flight pending-answer poll
 
     init() {
         this.loadStatus();
         this.loadSessions();
 
-        // Check URL for session parameter (from knowledge base "view" action)
+        // Priority: URL ?session= param > last session persisted in localStorage
         const sessionId = Router.getParam('session');
         if (sessionId) {
             this.selectSession(parseInt(sessionId));
+        } else {
+            const storedId = this.getStoredSessionId();
+            if (storedId) {
+                this.selectSession(storedId);
+            }
+        }
+    },
+
+    // ------------------------------------------------------------------
+    // Session persistence (survives full page navigation)
+    // ------------------------------------------------------------------
+
+    getStoredSessionId() {
+        const raw = localStorage.getItem(CONFIG.QA_SESSION_KEY);
+        if (!raw) return null;
+        const id = parseInt(raw, 10);
+        return isNaN(id) ? null : id;
+    },
+
+    saveCurrentSessionId(sessionId) {
+        if (sessionId == null) {
+            localStorage.removeItem(CONFIG.QA_SESSION_KEY);
+        } else {
+            localStorage.setItem(CONFIG.QA_SESSION_KEY, String(sessionId));
         }
     },
 
@@ -150,7 +175,9 @@ const QA = {
             Toast.error(result?.message || '创建会话失败');
             return;
         }
+        this._pollToken++;  // cancel any pending poll
         this.currentSessionId = result.id;
+        this.saveCurrentSessionId(result.id);
         await this.loadSessions();
         this.clearMessages();
         this.showWelcome();
@@ -159,7 +186,9 @@ const QA = {
 
     async selectSession(sessionId) {
         if (this.isQuerying) return;
+        this._pollToken++;  // cancel any pending poll
         this.currentSessionId = sessionId;
+        this.saveCurrentSessionId(sessionId);
 
         // Update active state in list
         document.querySelectorAll('.kb-session-card').forEach(c => {
@@ -190,7 +219,58 @@ const QA = {
             this.scrollToBottom();
         }
 
+        // If the last message is from the user, the previous AI turn may still
+        // be generating (e.g. the page was navigated away mid-response). Poll
+        // until the assistant reply lands, then re-render.
+        const last = messages[messages.length - 1];
+        if (last && last.role === 'user') {
+            this.pollForPendingAnswer(sessionId);
+        }
+
         document.getElementById('kbInput').focus();
+    },
+
+    // Poll until the in-flight AI reply for a session lands (used when the page
+    // was navigated away while the assistant was still generating).
+    async pollForPendingAnswer(sessionId) {
+        const token = ++this._pollToken;
+        this.showTyping();
+        const MAX_ATTEMPTS = 30;   // 30 * 2s = 60s
+        const INTERVAL = 2000;
+
+        for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+            await new Promise(res => setTimeout(res, INTERVAL));
+
+            // Superseded by a new poll, session switch, or an outgoing send —
+            // the cancelling flow already cleans up the typing placeholder.
+            if (token !== this._pollToken || this.currentSessionId !== sessionId || this.isQuerying) {
+                return;
+            }
+
+            const result = await Api.get(`/api/kbqa/sessions/${sessionId}`);
+            if (!result || result.error) continue;
+
+            const msgs = result.messages || [];
+            const last = msgs[msgs.length - 1];
+            if (last && last.role === 'assistant') {
+                this.hideTyping();
+                this.sessionSopMap[sessionId] = result.sop_id || null;
+                this.clearMessages();
+                msgs.forEach(msg => {
+                    if (msg.role === 'user') {
+                        this.renderUserMessage(msg.content);
+                    } else {
+                        this.renderAIMessage(msg.content, msg.message_type, msg.sources, msg.round, sessionId, msg.id);
+                    }
+                });
+                this.scrollToBottom();
+                this.loadSessions();
+                return;
+            }
+        }
+
+        // Timed out without a reply; leave the user message and hide placeholder
+        this.hideTyping();
     },
 
     async deleteSession(event, sessionId) {
@@ -202,7 +282,9 @@ const QA = {
                 return;
             }
             if (this.currentSessionId === sessionId) {
+                this._pollToken++;  // cancel any pending poll
                 this.currentSessionId = null;
+                this.saveCurrentSessionId(null);
                 this.clearMessages();
                 this.showWelcome();
             }
@@ -236,6 +318,8 @@ const QA = {
 
     async send(forceAnswer = false) {
         if (this.isQuerying) return;
+        this._pollToken++;   // cancel any pending poll
+        this.hideTyping();   // clear poll's typing placeholder if present
 
         const input = document.getElementById('kbInput');
         const question = input.value.trim();
@@ -249,6 +333,7 @@ const QA = {
                 return;
             }
             this.currentSessionId = session.id;
+            this.saveCurrentSessionId(session.id);
             await this.loadSessions();
         }
 

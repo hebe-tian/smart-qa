@@ -6,6 +6,9 @@ from app.extensions import db
 from app.models.analytics_event import AnalyticsEvent
 from app.models.test_case import TestCase
 from app.models.ai_call_log import AICallLog
+from app.models.kb_session import KBSession
+from app.models.sop import SOP
+from app.models.embedding import Embedding
 from app.services.logging_service import get_logger
 
 logger = get_logger("analytics")
@@ -44,6 +47,16 @@ class AnalyticsService:
         total_ai_calls = success_calls + failed_calls
         success_rate = round(success_calls / total_ai_calls * 100, 1) if total_ai_calls > 0 else 0
 
+        # Q&A stats
+        total_qa_sessions = KBSession.query.count()
+        qa_feedback_count = KBSession.query.filter(KBSession.feedback.isnot(None)).count()
+
+        # SOP stats
+        total_sops = SOP.query.count()
+        indexed_sops = db.session.query(
+            func.count(func.distinct(Embedding.source_id))
+        ).filter(Embedding.chunk_type == "sop").scalar() or 0
+
         return {
             "total_cases": total_cases,
             "total_generates": total_generates,
@@ -52,6 +65,10 @@ class AnalyticsService:
             "success_rate": success_rate,
             "success_calls": success_calls,
             "failed_calls": failed_calls,
+            "total_qa_sessions": total_qa_sessions,
+            "qa_feedback_count": qa_feedback_count,
+            "total_sops": total_sops,
+            "indexed_sops": indexed_sops,
         }
 
     def get_events(self, event_type=None, page=1, per_page=20):

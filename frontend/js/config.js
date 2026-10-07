@@ -3,6 +3,7 @@ const CONFIG = {
     API_BASE: '',  // Same origin, Flask serves both API and static files
     TOKEN_KEY: 'ai_testcase_token',
     USER_KEY: 'ai_testcase_user',
+    QA_SESSION_KEY: 'ai_testcase_qa_session',  // persisted current Q&A session id
     POLL_INTERVAL: 2000,  // 2 seconds for task polling
     PAGE_SIZE: 20,
 };

@@ -31,13 +31,18 @@ const SOPPage = {
             return;
         }
 
+        const isGuest = Auth.isGuest();
         tbody.innerHTML = sops.map(s => {
             const time = s.created_at ? new Date(s.created_at).toLocaleString('zh-CN') : '-';
             const indexBadge = s.indexed
                 ? `<span class="badge badge-success">已索引</span>`
                 : `<span class="badge badge-muted">未索引</span>`;
+            // Guests browse read-only: source session shown as plain text to avoid
+            // navigating into per-user QA sessions they don't own.
             const sessionCell = s.kb_session_id
-                ? `<button class="btn btn-ghost btn-sm" onclick="Router.navigate('qa', {session: ${s.kb_session_id}})">会话 #${s.kb_session_id}</button>`
+                ? (isGuest
+                    ? `<span>会话 #${s.kb_session_id}</span>`
+                    : `<button class="btn btn-ghost btn-sm" onclick="Router.navigate('qa', {session: ${s.kb_session_id}})">会话 #${s.kb_session_id}</button>`)
                 : '<span style="color:var(--text-muted);">—</span>';
             return `
                 <tr>
@@ -47,9 +52,9 @@ const SOPPage = {
                     <td>${indexBadge}</td>
                     <td>
                         <button class="btn btn-ghost btn-sm" onclick="SOPPage.viewSOP(${s.id})">查看</button>
-                        <button class="btn btn-ghost btn-sm" onclick="SOPPage.editSOP(${s.id})">编辑</button>
-                        <button class="btn btn-ghost btn-sm" onclick="SOPPage.indexSOP(${s.id})">${s.indexed ? '重建' : '构建知识库'}</button>
-                        <button class="btn btn-ghost btn-sm" onclick="SOPPage.deleteSOP(${s.id})">删除</button>
+                        <button class="btn btn-ghost btn-sm user-only" onclick="SOPPage.editSOP(${s.id})">编辑</button>
+                        <button class="btn btn-ghost btn-sm user-only" onclick="SOPPage.indexSOP(${s.id})">${s.indexed ? '重建' : '构建知识库'}</button>
+                        <button class="btn btn-ghost btn-sm user-only" onclick="SOPPage.deleteSOP(${s.id})">删除</button>
                     </td>
                 </tr>
             `;
@@ -77,7 +82,7 @@ const SOPPage = {
             `,
             footer: `
                 <button class="btn btn-secondary" onclick="Modal.close()">关闭</button>
-                <button class="btn btn-primary" onclick="SOPPage.editSOP(${sopId})">编辑</button>
+                <button class="btn btn-primary user-only" onclick="SOPPage.editSOP(${sopId})">编辑</button>
             `,
         });
     },
@@ -158,6 +163,7 @@ const SOPPage = {
     // ------------------------------------------------------------------
 
     async loadSopTemplate() {
+        if (Auth.isGuest()) return;  // guests don't see the template config section
         const result = await Api.sopGetTemplate();
         if (result && !result.error && result.template !== undefined) {
             document.getElementById('sopTemplateInput').value = result.template;

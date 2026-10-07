@@ -12,7 +12,7 @@ const Sidebar = {
     ],
 
     // Pages hidden from guests (management / sensitive pages)
-    guestHiddenIds: ['knowledge-base', 'sop', 'ai-config', 'call-logs'],
+    guestHiddenIds: ['knowledge-base', 'ai-config', 'call-logs'],
 
     render(activeId) {
         const sidebar = document.getElementById('sidebar');
@@ -40,8 +40,8 @@ const Sidebar = {
             <div class="sidebar-header">
                 <div class="sidebar-logo">AI</div>
                 <div>
-                    <div class="sidebar-title">AI用例生成平台</div>
-                    <div class="sidebar-subtitle">智能测试用例生成</div>
+                    <div class="sidebar-title">SMART-QA</div>
+                    <div class="sidebar-subtitle">智能QA系统</div>
                 </div>
             </div>
             <nav class="sidebar-nav">
